@@ -1,9 +1,9 @@
-import * as React from 'react';
+import * as React from "react"
 import { Store, Middleware } from "redux"
 
-import { IEvent, Event } from "./../Events";
+import { IEvent, Event } from "./../Events"
 
-import { createWorldStore, WorldState, DefaultWorldState, Entity } from './Store'
+import { createWorldStore, WorldState, DefaultWorldState, Entity } from "./Store"
 import { World } from "./World"
 
 import { GameView } from "./GameView"
@@ -35,7 +35,7 @@ export interface TickEventContext {
 }
 
 export type Action = {
-    type: string 
+    type: string
 }
 
 export interface GameModelStateChangedEventArgs<TState> {
@@ -47,15 +47,16 @@ export type SelectorFunction<TState> = (world: World) => TState
 
 export interface GameModel<TState, TActions> {
     selector: SelectorFunction<TState>
-    onStateChanged(): IEvent<GameModelStateChangedEventArgs<TState>>
 }
 
-export type ReducerFunction<TState, TActions> = (state: TState, action: TActions, world: World) => TState
+export type ReducerFunction<TState, TActions> = (
+    state: TState,
+    action: TActions,
+    world: World,
+) => TState
 
 export class Game {
-
     private _nextModelId = 0
-
     private _onAction = new Event<void>()
     private _onStateChangedEvent = new Event<void>()
     private _onTickEvent = new Event<TickEventContext>()
@@ -92,8 +93,11 @@ export class Game {
         })
     }
 
-    public createModel<TState, TActions>(friendlyName: string, defaultState: TState, reducer: ReducerFunction<TState>): GameModel<TState, TActions> {
-
+    public createModel<TState, TActions>(
+        friendlyName: string,
+        defaultState: TState,
+        reducer: ReducerFunction<TState, TActions>,
+    ): GameModel<TState, TActions> {
         const modelId = this._nextModelId.toString()
         this._nextModelId++
 
@@ -103,12 +107,12 @@ export class Game {
             id: modelId,
             state: defaultState,
             reducer,
-        }) 
+        })
 
         const selector = (world: World): TState => {
             const worldState = world as WorldState
             const model = worldState.models[modelId]
-            
+
             if (!model) {
                 return defaultState
             } else {
@@ -118,7 +122,6 @@ export class Game {
 
         return {
             selector,
-            onStateChanged: null
         }
     }
 
@@ -161,7 +164,7 @@ export class Game {
             this._lastTick = perf - UPDATE_RATE
         }
 
-        let delta = ((perf - this._lastTick) * this._timeMultiplier) + this._remainder
+        let delta = (perf - this._lastTick) * this._timeMultiplier + this._remainder
 
         let maxTicks = 5
         while (delta > UPDATE_RATE && maxTicks >= 0) {
@@ -181,14 +184,13 @@ export class Game {
     }
 
     private _tickFunction(deltaTime: number): void {
-
         if (this._paused) {
             return
         }
 
         this._store.dispatch({
             type: "TICK",
-            deltaTime: deltaTime
+            deltaTime: deltaTime,
         })
 
         this._onTickEvent.dispatch({ deltaTimeInMilliseconds: deltaTime })

@@ -1,8 +1,8 @@
-import { applyMiddleware, compose, createStore, Middleware } from "redux";
+import { applyMiddleware, compose, createStore, Middleware } from "redux"
 
 import { World } from "./World"
 
-import { GameActions, NullAction } from "./Actions";
+import { GameActions, NullAction } from "./Actions"
 import { ReducerFunction } from "./index"
 
 export interface Model {
@@ -15,10 +15,6 @@ export type IdToModel = { [id: string]: Model }
 
 export interface WorldState extends World {
     models: IdToModel
-
-    width: number
-    height: number
-
     totalElapsedTime: number
 }
 
@@ -28,15 +24,10 @@ export type Radians = number
 
 export const DefaultWorldState: WorldState = {
     models: {},
-    nextEnemyId: 0,
-    width: -1,
-    height: -1,
-
     totalElapsedTime: 0,
 }
 
 const reducer = (state: WorldState = DefaultWorldState, action: GameActions): WorldState => {
-
     if (action.type === "@@core/NULL") {
         return state
     }
@@ -47,13 +38,12 @@ const reducer = (state: WorldState = DefaultWorldState, action: GameActions): Wo
     }
 
     switch (action.type) {
-        case "TICK":
-            {
-                return {
-                    ...newState,
-                    totalElapsedTime: state.totalElapsedTime + action.deltaTime,
-                }
+        case "@@core/TICK": {
+            return {
+                ...newState,
+                totalElapsedTime: state.totalElapsedTime + action.deltaTime,
             }
+        }
         default:
             return newState
     }
@@ -68,21 +58,21 @@ const modelsReducer = (models: IdToModel, action: GameActions, world: World): Id
                     friendlyName: action.friendlyName,
                     state: action.state,
                     reducer: action.reducer,
-                }
+                },
             }
 
-        default: 
+        default:
             const newModels = {
                 ...models,
             }
 
-            Object.keys(models).forEach((key) => {
+            Object.keys(models).forEach(key => {
                 const model = models[key]
                 newModels[key] = modelReducer(model, action, world)
             })
 
             return newModels
-        }
+    }
 }
 
 const modelReducer = (model: Model, action: any, world: World): Model => {
@@ -96,10 +86,8 @@ const modelReducer = (model: Model, action: any, world: World): Model => {
             state: newState,
         }
     }
-    
 }
 
 export const createWorldStore = () => {
-    return createStore<World>(reducer, DefaultWorldState)
+    return createStore(reducer, DefaultWorldState)
 }
-
