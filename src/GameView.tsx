@@ -1,8 +1,9 @@
-import * as React from 'react';
+import * as React from "react"
 import { Store } from "redux"
 
-import { Game, RenderFunction } from './index'
-import { createWorldStore, WorldState, DefaultWorldState, Entity } from './Store'
+import { Game } from "./Game"
+import { createWorldStore, WorldState, DefaultWorldState } from "./Store"
+import { RenderFunction } from "./Types"
 import { World } from "./World"
 
 export interface GameViewProps {
@@ -23,9 +24,8 @@ export class GameView extends React.PureComponent<GameViewProps, GameViewState> 
         super(props)
 
         this.state = {
-            world: DefaultWorldState
+            world: DefaultWorldState,
         }
-
     }
 
     public componentDidMount(): void {
