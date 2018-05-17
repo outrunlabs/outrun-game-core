@@ -198,6 +198,10 @@ object-assign@^4.1.0, object-assign@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
 
+oni-types@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/oni-types/-/oni-types-0.0.8.tgz#1dfe97eda3f2b97dfcb94609af25fc2e4172fa33"
+
 p-finally@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/p-finally/-/p-finally-1.0.0.tgz#3fbcfb15b899a44123b34b6dcc18b724336a2cae"

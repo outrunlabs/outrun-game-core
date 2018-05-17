@@ -1,7 +1,6 @@
 import * as React from "react"
 import { Store, Middleware } from "redux"
-
-import { IEvent, Event } from "./../Events"
+import { IEvent, Event } from "oni-types"
 
 import { createWorldStore, WorldState, DefaultWorldState, Entity } from "./Store"
 import { World } from "./World"
@@ -57,7 +56,7 @@ export type ReducerFunction<TState, TActions> = (
 
 export class Game {
     private _nextModelId = 0
-    private _onAction = new Event<void>()
+    private _onAction = new Event<Action>()
     private _onStateChangedEvent = new Event<void>()
     private _onTickEvent = new Event<TickEventContext>()
     private _tickFunctionReference: any
