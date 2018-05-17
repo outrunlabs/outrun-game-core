@@ -1,0 +1,22 @@
+{
+  "name": "outrun-game-core",
+  "version": "0.0.1",
+  "description": "Functional core for developing web games",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/outrunlabs/outrun-game-core.git"
+  },
+  "author": "Outrun Labs, LLC",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/outrunlabs/outrun-game-core/issues"
+  },
+  "homepage": "https://github.com/outrunlabs/outrun-game-core#readme"
+}
