@@ -8,11 +8,19 @@
     },
     "scripts": {
         "precommit": "pretty-quick --staged",
-        "test": "npm run test"
+        "build": "tsc",
+        "test": "jest"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/outrunlabs/outrun-game-core.git"
+    },
+    "jest": {
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+        "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
     },
     "author": "Outrun Labs, LLC",
     "license": "GPL-3.0",
