@@ -1,8 +1,10 @@
 import * as React from "react"
+import * as ReactDOM from "react-dom"
 import { Store, Middleware } from "redux"
 import { IEvent, Event } from "oni-types"
 
 import { Action } from "./Actions"
+import { DomRenderer } from "./DomRenderer"
 import { createWorldStore, WorldState } from "./Store"
 import { ReducerFunction, GameModel, RenderFunction } from "./Types"
 import { GameView } from "./GameView"
@@ -28,6 +30,19 @@ export class Game {
     private _timeMultiplier: number = 1.0
     private _store: Store<WorldState, any>
 
+    private _renderFunction: RenderFunction = () => <div>Boring game, create a view!</div>
+
+    public static start(): Game {
+        const renderer = new DomRenderer()
+        const game = new Game(renderer)
+        renderer.start(game)
+        return game
+    }
+
+    public get renderFunction(): RenderFunction {
+        return this._renderFunction
+    }
+
     public get onAction(): IEvent<Action> {
         return this._onAction
     }
@@ -44,7 +59,7 @@ export class Game {
         return this._paused
     }
 
-    constructor() {
+    private constructor(private _renderer: DomRenderer) {
         this._store = createWorldStore()
 
         this._store.subscribe(() => {
@@ -112,10 +127,9 @@ export class Game {
         return this._store.getState()
     }
 
-    public render(renderFunction: RenderFunction): JSX.Element {
-        return <GameView game={this} render={renderFunction} />
+    public setView(renderFunction: RenderFunction): void {
+        this._renderer.setView(renderFunction)
     }
-
     private _onFrame(): void {
         const perf = Date.now()
 

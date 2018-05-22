@@ -1,5 +1,6 @@
 export * from "./Actions"
 export * from "./Game"
+export * from "./Platform"
 export * from "./Selectors"
 export * from "./Types"
 export * from "./World"
