@@ -30,7 +30,7 @@ export class Game {
     private _timeMultiplier: number = 1.0
     private _store: Store<WorldState, any>
 
-    private _renderFunction: RenderFunction = () => <div>Boring game, create a view!</div>
+    private _renderFunction: RenderFunction | null = null
 
     public static start(): Game {
         const renderer = new DomRenderer()
@@ -39,7 +39,7 @@ export class Game {
         return game
     }
 
-    public get renderFunction(): RenderFunction {
+    public get renderFunction(): RenderFunction | null {
         return this._renderFunction
     }
 

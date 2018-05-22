@@ -22,30 +22,33 @@ export class DomRenderer {
         element.style.top = "0px"
         element.style.left = "0px"
         element.style.right = "0px"
-        element.style.height = "0px"
+        element.style.bottom = "0px"
         document.body.appendChild(element)
         this._element = element
         this.setView(() => {
             return (
-                <div style={{ backgroundColor: "#6495ed", color: "white" }}>
-                    <span>
-                        This is a boring game! Create some Views and Models to make it interesting.
+                <div
+                    style={{
+                        backgroundColor: "#6495ed",
+                        color: "white",
+                        width: "100%",
+                        height: "100%",
+                        display: "Flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <span style={{ textAlign: "center" }}>
+                        This is a boring game... Spice it up with your own View!
                     </span>
                 </div>
             )
         })
-        ReactDOM.render(
-            <GameView game={this._game} render={this._game.renderFunction} />,
-            this._element,
-        )
     }
 
     public setView(renderFunction: RenderFunction): void {
         if (this._game) {
-            ReactDOM.render(
-                <GameView game={this._game} render={this._game.renderFunction} />,
-                this._element,
-            )
+            ReactDOM.render(<GameView game={this._game} render={renderFunction} />, this._element)
         }
     }
 }
