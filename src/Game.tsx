@@ -162,7 +162,7 @@ export class Game {
         }
 
         this._store.dispatch({
-            type: "TICK",
+            type: "@@core/TICK",
             deltaTime: deltaTime,
         })
 

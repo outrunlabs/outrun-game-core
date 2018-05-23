@@ -23,6 +23,7 @@ export class DomRenderer {
         element.style.left = "0px"
         element.style.right = "0px"
         element.style.bottom = "0px"
+        element.style.overflow = "hidden"
         document.body.appendChild(element)
         this._element = element
         this.setView(() => {
