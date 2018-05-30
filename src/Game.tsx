@@ -6,7 +6,7 @@ import { IEvent, Event } from "oni-types"
 import { Action } from "./Actions"
 import { DomRenderer } from "./DomRenderer"
 import { createWorldStore, WorldState } from "./Store"
-import { ReducerFunction, GameModel, RenderFunction } from "./Types"
+import { ReducerFunction, GameModel, RenderFunction, RenderEventContext } from "./Types"
 import { GameView } from "./GameView"
 import { World } from "./World"
 
@@ -16,17 +16,12 @@ export interface TickEventContext {
     deltaTimeInMilliseconds: number
 }
 
-export interface FrameEventContext {
-    currentWorld: World
-    previousWorld: World
-    alpha: number
-}
-
 export class Game {
     private _nextModelId = 0
     private _onAction = new Event<Action>()
     private _onStateChangedEvent = new Event<void>()
     private _onTickEvent = new Event<TickEventContext>()
+    private _onFrameEvent = new Event<RenderEventContext>()
     private _tickFunctionReference: any
 
     private _lastTick: number = 0
@@ -45,12 +40,12 @@ export class Game {
         return game
     }
 
-    public get renderFunction(): RenderFunction | null {
-        return this._renderFunction
-    }
-
     public get onAction(): IEvent<Action> {
         return this._onAction
+    }
+
+    public get onFrame(): IEvent<RenderEventContext> {
+        return this._onFrameEvent
     }
 
     public get onStateChanged(): IEvent<void> {
@@ -144,6 +139,8 @@ export class Game {
             this._lastTick = perf - UPDATE_RATE
         }
 
+        let previousWorld = this._store.getState()
+
         let delta = (perf - this._lastTick) * this._timeMultiplier + this._remainder
 
         while (delta >= UPDATE_RATE) {
@@ -154,8 +151,11 @@ export class Game {
         this._remainder = delta
         this._lastTick = perf
 
-        console.log("Remainder: " + this._remainder)
-        console.log("Remainder alpha: " + this._remainder / UPDATE_RATE)
+        this._onFrameEvent.dispatch({
+            previousWorld,
+            nextWorld: this._store.getState(),
+            alpha: this._remainder / UPDATE_RATE,
+        })
 
         window.requestAnimationFrame(() => this._onFrame())
     }

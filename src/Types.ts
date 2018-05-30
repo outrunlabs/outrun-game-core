@@ -2,7 +2,13 @@ import { applyMiddleware, compose, createStore, Middleware } from "redux"
 
 import { World } from "./World"
 
-export type RenderFunction = (world: World) => JSX.Element
+export interface RenderEventContext {
+    nextWorld: World
+    previousWorld: World
+    alpha: number
+}
+
+export type RenderFunction = (renderContext: RenderEventContext) => JSX.Element
 
 export interface GameModelStateChangedEventArgs<TState> {
     oldState: TState

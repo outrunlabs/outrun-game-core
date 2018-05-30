@@ -3,19 +3,15 @@ import { Store } from "redux"
 
 import { Game } from "./Game"
 import { createWorldStore, WorldState, DefaultWorldState } from "./Store"
-import { RenderFunction } from "./Types"
+import { RenderFunction, RenderEventContext } from "./Types"
 import { World } from "./World"
 
 export interface GameViewProps {
     game: Game
-    render: (world: World) => JSX.Element
+    render: RenderFunction
 }
 
-export interface GameViewState {
-    world: World
-}
-
-export class GameView extends React.PureComponent<GameViewProps, GameViewState> {
+export class GameView extends React.PureComponent<GameViewProps, RenderEventContext> {
     private _subscription: any
     private _isMounted: boolean = false
     private _isPendingAnimationFrame: boolean = false
@@ -24,39 +20,30 @@ export class GameView extends React.PureComponent<GameViewProps, GameViewState> 
         super(props)
 
         this.state = {
-            world: DefaultWorldState,
+            previousWorld: DefaultWorldState,
+            nextWorld: DefaultWorldState,
+            alpha: 0,
         }
     }
 
     public componentDidMount(): void {
-        this._isMounted = true
-        this._requestFrame()
+        this._subscription = this.props.game.onFrame.subscribe(
+            (renderEventContext: RenderEventContext) => this._render(renderEventContext),
+        )
     }
 
     public componentWillUnmount(): void {
-        this._isMounted = false
+        if (this._subscription) {
+            this._subscription.dispose()
+            this._subscription = null
+        }
     }
 
     public render(): JSX.Element {
-        return this.props.render(this.state.world)
+        return this.props.render(this.state)
     }
 
-    private _requestFrame(): void {
-        if (this._isMounted && !this._isPendingAnimationFrame) {
-            this._isPendingAnimationFrame = true
-            window.requestAnimationFrame(() => this._render())
-        }
-    }
-
-    private _render(): void {
-        const latestWorld = this.props.game.getWorld()
-        if (latestWorld !== this.state.world) {
-            this.setState({
-                world: latestWorld,
-            })
-        }
-        this._isPendingAnimationFrame = false
-
-        this._requestFrame()
+    private _render(renderEventContext: RenderEventContext): void {
+        this.setState(renderEventContext)
     }
 }
