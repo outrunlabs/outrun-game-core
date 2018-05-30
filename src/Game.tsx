@@ -10,10 +10,16 @@ import { ReducerFunction, GameModel, RenderFunction } from "./Types"
 import { GameView } from "./GameView"
 import { World } from "./World"
 
-const UPDATE_RATE = 50
+const UPDATE_RATE = 16
 
 export interface TickEventContext {
     deltaTimeInMilliseconds: number
+}
+
+export interface FrameEventContext {
+    currentWorld: World
+    previousWorld: World
+    alpha: number
 }
 
 export class Game {
@@ -130,6 +136,7 @@ export class Game {
     public setView(renderFunction: RenderFunction): void {
         this._renderer.setView(renderFunction)
     }
+
     private _onFrame(): void {
         const perf = Date.now()
 
@@ -139,19 +146,16 @@ export class Game {
 
         let delta = (perf - this._lastTick) * this._timeMultiplier + this._remainder
 
-        let maxTicks = 5
-        while (delta > UPDATE_RATE && maxTicks >= 0) {
+        while (delta >= UPDATE_RATE) {
             this._tickFunction(UPDATE_RATE)
             delta = delta - UPDATE_RATE
-            maxTicks--
         }
 
-        if (maxTicks <= 0) {
-            this._remainder = 0
-        } else {
-            this._remainder = delta
-        }
+        this._remainder = delta
         this._lastTick = perf
+
+        console.log("Remainder: " + this._remainder)
+        console.log("Remainder alpha: " + this._remainder / UPDATE_RATE)
 
         window.requestAnimationFrame(() => this._onFrame())
     }
