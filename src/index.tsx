@@ -5,19 +5,25 @@ export * from "./Selectors"
 export * from "./Types"
 export * from "./World"
 
+import { isBrowser } from "./Utility"
+
 import { DimensionsProvider } from "./DimensionsProvider"
 
 export const Dimensions = new DimensionsProvider()
 
-const updateDimensions = () => {
-    Dimensions.set("window", {
-        width: window.innerWidth,
-        height: window.innerHeight,
-    })
-}
+if (isBrowser()) {
+    const updateDimensions = () => {
+        Dimensions.set("window", {
+            width: window.innerWidth,
+            height: window.innerHeight,
+        })
+    }
 
-updateDimensions()
+    if (window) {
+        updateDimensions()
 
-window.onresize = () => {
-    updateDimensions()
+        window.onresize = () => {
+            updateDimensions()
+        }
+    }
 }

@@ -9,11 +9,13 @@ import { createWorldStore, WorldState } from "./Store"
 import { ReducerFunction, GameModel, RenderFunction, RenderEventContext } from "./Types"
 import { GameView } from "./GameView"
 import { World } from "./World"
+import { isBrowser } from "./Utility"
 
-const UPDATE_RATE = 16
+export type Seconds = number
 
 export interface TickEventContext {
-    deltaTimeInMilliseconds: number
+    deltaTime: Seconds
+    tick: number
 }
 
 export class Game {
@@ -24,8 +26,12 @@ export class Game {
     private _onFrameEvent = new Event<RenderEventContext>()
     private _tickFunctionReference: any
 
-    private _lastTick: number = 0
-    private _remainder: number = 0
+    private _targetUpdateTime: number = 1000 / (60 * 1000)
+
+    private _tick: number = 0
+
+    private _lastTickTime: number = 0
+    private _frameRemainderTime: number = 0
 
     private _paused: boolean = false
     private _timeMultiplier: number = 1.0
@@ -34,10 +40,18 @@ export class Game {
     private _renderFunction: RenderFunction | null = null
 
     public static start(): Game {
-        const renderer = new DomRenderer()
+        const renderer = isBrowser() ? new DomRenderer() : null
         const game = new Game(renderer)
-        renderer.start(game)
+
+        if (renderer) {
+            renderer.start(game)
+        }
+
         return game
+    }
+
+    public setUpdateRate(updateRate: number): void {
+        this._targetUpdateTime = 1000 / (updateRate * 1000)
     }
 
     public get onAction(): IEvent<Action> {
@@ -60,7 +74,7 @@ export class Game {
         return this._paused
     }
 
-    private constructor(private _renderer: DomRenderer) {
+    private constructor(private _renderer: DomRenderer | null) {
         this._store = createWorldStore()
 
         this._store.subscribe(() => {
@@ -101,7 +115,7 @@ export class Game {
     }
 
     public start(): void {
-        this._lastTick = Date.now()
+        this._lastTickTime = Date.now() / 1000
 
         this._onFrame()
     }
@@ -129,35 +143,44 @@ export class Game {
     }
 
     public setView(renderFunction: RenderFunction): void {
-        this._renderer.setView(renderFunction)
+        // TODO: Stub out renderer for server
+        if (this._renderer) {
+            this._renderer.setView(renderFunction)
+        }
     }
 
     private _onFrame(): void {
-        const perf = Date.now()
+        const perf = Date.now() / 1000
 
-        if (this._lastTick === 0) {
-            this._lastTick = perf - UPDATE_RATE
+        const UPDATE_TIME = this._targetUpdateTime
+
+        if (this._lastTickTime === 0) {
+            this._lastTickTime = perf - UPDATE_TIME
         }
 
         let previousWorld = this._store.getState()
 
-        let delta = (perf - this._lastTick) * this._timeMultiplier + this._remainder
+        let delta = (perf - this._lastTickTime) * this._timeMultiplier + this._frameRemainderTime
 
-        while (delta >= UPDATE_RATE) {
-            this._tickFunction(UPDATE_RATE)
-            delta = delta - UPDATE_RATE
+        while (delta >= UPDATE_TIME) {
+            this._tickFunction(UPDATE_TIME)
+            delta = delta - UPDATE_TIME
         }
 
-        this._remainder = delta
-        this._lastTick = perf
+        this._frameRemainderTime = delta
+        this._lastTickTime = perf
 
         this._onFrameEvent.dispatch({
             previousWorld,
             nextWorld: this._store.getState(),
-            alpha: this._remainder / UPDATE_RATE,
+            alpha: this._frameRemainderTime / UPDATE_TIME,
         })
 
-        window.requestAnimationFrame(() => this._onFrame())
+        if (isBrowser()) {
+            window.requestAnimationFrame(() => this._onFrame())
+        } else {
+            setTimeout(() => this._onFrame())
+        }
     }
 
     private _tickFunction(deltaTime: number): void {
@@ -165,11 +188,14 @@ export class Game {
             return
         }
 
+        this._tick++
+
         this._store.dispatch({
             type: "@@core/TICK",
             deltaTime: deltaTime,
+            tick: this._tick,
         })
 
-        this._onTickEvent.dispatch({ deltaTimeInMilliseconds: deltaTime })
+        this._onTickEvent.dispatch({ deltaTime: deltaTime, tick: this._tick })
     }
 }
