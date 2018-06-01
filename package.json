@@ -10,7 +10,8 @@
     "scripts": {
         "precommit": "pretty-quick --staged",
         "build": "tsc",
-        "test": "jest"
+        "test": "jest --coverage",
+        "coverage": "codecov"
     },
     "repository": {
         "type": "git",
