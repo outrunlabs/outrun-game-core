@@ -2,11 +2,19 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-    - "9"
+- '9'
 install:
-    - npm install
-    - npm install codecov -g
+- npm install
+- npm install codecov -g
 script:
-    - npm run build
-    - npm run test
-    - npm run coverage
+- npm run build
+- npm run test
+- npm run coverage
+deploy:
+  provider: npm
+  email: npm@outrunlabs.com
+  skip_cleanup: true
+  api_key:
+    secure: ClqQ/4Fem0RciJbim0cfF024WyYxoXeNrRb2ff86C25a2qk/ONjCL81TAzRIX6q3SoJxFYt/XnWf+Xubz5J9UYf3QdZVR9UXba5HXYLio0Xty2rdeLHmqTWr0n2JNA1Dt2DSXsY8dxMkfwB7/MFxkR3kuSWwDyO/rErD8Z8yyO44PGda9V1VXjpBINqwHDLhtsgcvn88CmuGH/PwEvdqHURr0+8jFA5WbfQ3SDmypkGNtdh6ZAY1ZYNZKq8BDonfYW60YOV+jvhZBxackTPhv/Z4BBNf2b3hh7hT4IbUeXP0cH+rgoryYeIdPA89WbwhbzQ7Dk6SzOSdJ0BExXtqBJUXIBD0sCsEfzeJ6rrxScld11YPiDKOgm6XoptZ61Ua0LHvcQ1gNjjZS3iByt4LKtAw8FE0SjJfp/ZHCn92jMVcLIIXmy7eqmI/KH3fg+zJPYlzUkBK7hBUZnf4dkkpNmBcbkHzDZ6tZEKID5ihv2QMK6vUwoo+u8jkuWTbCodxMV/CTAxJB5duLpfdkLQt7D/G1j7tg8GtMBsCXRWXB1tQ9iPIRMqc4nzIJMkxMnQP8avWDWHCtYNOxCuCIWU1XLtHtuoSXzShR/G07Kfd9E6HPv+gFL3WeUJcA5TNLc/06rv48hStG1enTzAvM+Kh3i5v+YcdSpn7sNhqFp6dMZ0=
+  on:
+    repo: outrunlabs/outrun-game-core
