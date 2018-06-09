@@ -19,7 +19,6 @@ export interface TickEventContext {
 }
 
 export class Game {
-    private _nextModelId = 0
     private _onAction = new Event<Action>()
     private _onStateChangedEvent = new Event<void>()
     private _onTickEvent = new Event<TickEventContext>()
@@ -87,20 +86,17 @@ export class Game {
         defaultState: TState,
         reducer: ReducerFunction<TState, TActions>,
     ): GameModel<TState, TActions> {
-        const modelId = this._nextModelId.toString()
-        this._nextModelId++
-
         this.dispatch({
             type: "@@core/CREATE_MODEL",
             friendlyName,
-            id: modelId,
+            id: friendlyName,
             state: defaultState,
             reducer,
         })
 
         const selector = (world: World): TState => {
             const worldState = world as WorldState
-            const model = worldState.models[modelId]
+            const model = worldState.models[friendlyName]
 
             if (!model) {
                 return defaultState
