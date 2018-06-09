@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Store } from "redux"
 
+import * as Context from "./Context"
 import { Game } from "./Game"
 import { createWorldStore, WorldState, DefaultWorldState } from "./Store"
 import { RenderFunction, RenderEventContext } from "./Types"
@@ -40,7 +41,9 @@ export class GameView extends React.PureComponent<GameViewProps, RenderEventCont
     }
 
     public render(): JSX.Element {
-        return this.props.render(this.state)
+        Context.setContext(this.state)
+        const result = this.props.render(this.state)
+        return result
     }
 
     private _render(renderEventContext: RenderEventContext): void {
