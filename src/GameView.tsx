@@ -40,7 +40,14 @@ export class GameView extends React.PureComponent<GameViewProps, RenderEventCont
     }
 
     public render(): JSX.Element {
-        return this.props.render(this.state)
+        const contexts = this.props.game.contexts
+        let elem = this.props.render(this.state)
+
+        contexts.forEach(c => {
+            elem = React.createElement(c.contextProvider, { value: c.valueFunc(this.state) }, elem)
+        })
+
+        return elem
     }
 
     private _render(renderEventContext: RenderEventContext): void {

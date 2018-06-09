@@ -18,6 +18,11 @@ export interface TickEventContext {
     tick: number
 }
 
+export interface ContextProvider {
+    contextProvider: React.ComponentType<React.ProviderProps<any>>
+    valueFunc: (rec: RenderEventContext) => any
+}
+
 export class Game {
     private _nextModelId = 0
     private _onAction = new Event<Action>()
@@ -36,7 +41,7 @@ export class Game {
     private _paused: boolean = false
     private _timeMultiplier: number = 1.0
     private _store: Store<WorldState, any>
-
+    private _contexts: ContextProvider[] = []
     private _renderFunction: RenderFunction | null = null
 
     public static start(): Game {
@@ -52,6 +57,10 @@ export class Game {
 
     public setUpdateRate(updateRate: number): void {
         this._targetUpdateTime = 1000 / (updateRate * 1000)
+    }
+
+    public get contexts(): ContextProvider[] {
+        return this._contexts
     }
 
     public get onAction(): IEvent<Action> {
@@ -112,6 +121,16 @@ export class Game {
         return {
             selector,
         }
+    }
+
+    public registerContext<T>(
+        contextProvider: React.ComponentType<React.ProviderProps<T>>,
+        valueFunc: (rec: RenderEventContext) => T,
+    ): void {
+        this._contexts.push({
+            contextProvider,
+            valueFunc,
+        })
     }
 
     public start(): void {
