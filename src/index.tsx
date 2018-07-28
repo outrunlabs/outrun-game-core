@@ -1,10 +1,7 @@
 export * from "./Actions"
 export * from "./Game"
 export * from "./Platform"
-export * from "./Selectors"
 export * from "./Types"
-export * from "./World"
-export * from "./connectToWorld"
 
 import { isBrowser } from "./Utility"
 

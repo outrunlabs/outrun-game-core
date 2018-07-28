@@ -3,8 +3,42 @@ import * as React from "react"
 import { IEvent } from "oni-types"
 import { Game } from "./../src/Game"
 
+import { Effect } from "./../src/Types"
+
+export interface SimpleWorld {
+    value: number
+}
+
+export const simpleReducer = (world: SimpleWorld, action: any) => {
+    switch (action.type) {
+        case "TEST": {
+            return { value: world.value + 1 }
+        }
+        default:
+            return world
+    }
+}
+
+export const reducerWithEffect = (callback: Function) => (
+    world: SimpleWorld,
+    action: any,
+): SimpleWorld | [SimpleWorld, Effect] => {
+    switch (action.type) {
+        case "TEST": {
+            return [world, () => callback()]
+        }
+        default:
+            return [world, null]
+    }
+}
+
 it("emits actions", () => {
-    const game = new Game()
+    const game = Game.create(
+        {
+            value: 1,
+        },
+        simpleReducer,
+    )
 
     let hitCount = 0
     game.onAction.subscribe(action => {
@@ -17,66 +51,21 @@ it("emits actions", () => {
     expect(hitCount).toBe(1)
 })
 
-interface TestState {
-    count: number
-}
+it("executes effects", () => {
+    let hitCount = 0
 
-const DefaultState: TestState = {
-    count: 0,
-}
+    const effect = () => hitCount++
 
-type Actions =
-    | {
-          type: "Increment"
-      }
-    | {
-          type: "Decrement"
-      }
+    const game = Game.create(
+        {
+            value: 1,
+        },
+        reducerWithEffect(effect),
+    )
 
-const TestReducer = (state: TestState, actions: Actions) => {
-    switch (actions.type) {
-        case "Increment":
-            return {
-                count: state.count + 1,
-            }
-        case "Decrement":
-            return {
-                count: state.count - 1,
-            }
-        default:
-            return state
-    }
-}
+    game.dispatch({ type: "TEST" })
 
-describe("createModel", () => {
-    it("creates a model", () => {
-        const game = new Game()
-        const model = game.createModel<TestState, Actions>("test", DefaultState, TestReducer)
-        expect(model).not.toBe(null)
-    })
+    const newState = game.getWorld()
 
-    it("model selector returns initial state", () => {
-        const game = new Game()
-        const model = game.createModel<TestState, Actions>("test", DefaultState, TestReducer)
-
-        const world = game.getWorld()
-        const state = model.selector(world)
-
-        expect(state).toEqual(DefaultState)
-    })
-
-    it("selector returns new change after state change", () => {
-        const game = new Game()
-        const model = game.createModel<TestState, Actions>("test", DefaultState, TestReducer)
-
-        const world = game.getWorld()
-
-        game.dispatch({ type: "Increment" })
-
-        const world2 = game.getWorld()
-        const newState = model.selector(world2)
-
-        expect(newState).not.toEqual(DefaultState)
-        expect(newState.count).toEqual(1)
-    })
+    expect(hitCount).toBe(1)
 })

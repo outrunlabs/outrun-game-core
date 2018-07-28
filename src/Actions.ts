@@ -16,10 +16,3 @@ export type GameActions =
     | {
           type: "@@core/NULL"
       }
-    | {
-          type: "@@core/CREATE_MODEL"
-          friendlyName: string
-          id: string
-          state: any
-          reducer: ReducerFunction<any, any>
-      }

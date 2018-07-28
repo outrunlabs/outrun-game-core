@@ -4,11 +4,13 @@ import { Store, Middleware } from "redux"
 import { IEvent, Event } from "oni-types"
 
 import { Action } from "./Actions"
-import { DomRenderer } from "./DomRenderer"
-import { createWorldStore, WorldState } from "./Store"
-import { ReducerFunction, GameModel, RenderFunction, RenderEventContext } from "./Types"
-import { GameView } from "./GameView"
-import { World } from "./World"
+import {
+    ReducerFunction,
+    RenderFunction,
+    RenderEventContext,
+    DispatchFunction,
+    Effect,
+} from "./Types"
 import { isBrowser } from "./Utility"
 
 export type Seconds = number
@@ -18,11 +20,17 @@ export interface TickEventContext {
     tick: number
 }
 
-export class Game {
+export type State<T> = {
+    action: Action
+    state: T
+}
+
+const noop = () => {}
+
+export class Game<TWorld> {
     private _onAction = new Event<Action>()
-    private _onStateChangedEvent = new Event<void>()
     private _onTickEvent = new Event<TickEventContext>()
-    private _onFrameEvent = new Event<RenderEventContext>()
+    private _onFrameEvent = new Event<RenderEventContext<TWorld>>()
     private _tickFunctionReference: any
 
     private _targetUpdateTime: number = 1000 / (60 * 1000)
@@ -34,19 +42,15 @@ export class Game {
 
     private _paused: boolean = false
     private _timeMultiplier: number = 1.0
-    private _store: Store<WorldState, any>
 
-    private _renderFunction: RenderFunction | null = null
+    private _renderers: RenderFunction<TWorld>[] = []
 
-    public static start(): Game {
-        const renderer = isBrowser() ? new DomRenderer() : null
-        const game = new Game(renderer)
+    private _states: State<TWorld>[] = []
+    private _reducer: ReducerFunction<TWorld, TWorld>
+    private _dispatchFunction: DispatchFunction
 
-        if (renderer) {
-            renderer.start(game)
-        }
-
-        return game
+    public static create<T>(world: T, reducer: ReducerFunction<T, T>): Game<T> {
+        return new Game<T>(world, reducer)
     }
 
     public setUpdateRate(updateRate: number): void {
@@ -57,12 +61,8 @@ export class Game {
         return this._onAction
     }
 
-    public get onFrame(): IEvent<RenderEventContext> {
+    public get onFrame(): IEvent<RenderEventContext<TWorld>> {
         return this._onFrameEvent
-    }
-
-    public get onStateChanged(): IEvent<void> {
-        return this._onStateChangedEvent
     }
 
     public get onTick(): IEvent<TickEventContext> {
@@ -73,41 +73,19 @@ export class Game {
         return this._paused
     }
 
-    private constructor(private _renderer: DomRenderer | null) {
-        this._store = createWorldStore()
-
-        this._store.subscribe(() => {
-            this._onStateChangedEvent.dispatch()
-        })
+    public getWorld(): TWorld {
+        return this._states[this._states.length - 1].state
     }
 
-    public createModel<TState, TActions>(
-        friendlyName: string,
-        defaultState: TState,
-        reducer: ReducerFunction<TState, TActions>,
-    ): GameModel<TState, TActions> {
-        this.dispatch({
-            type: "@@core/CREATE_MODEL",
-            friendlyName,
-            id: friendlyName,
-            state: defaultState,
-            reducer,
+    private constructor(world: TWorld, reducer: ReducerFunction<TWorld, TWorld>) {
+        this._states.push({
+            state: world,
+            action: { type: "@@genesis" },
         })
 
-        const selector = (world: World): TState => {
-            const worldState = world as WorldState
-            const model = worldState.models[friendlyName]
+        this._reducer = reducer
 
-            if (!model) {
-                return defaultState
-            } else {
-                return model.state
-            }
-        }
-
-        return {
-            selector,
-        }
+        this._dispatchFunction = (action: Action) => this.dispatch(action)
     }
 
     public start(): void {
@@ -117,9 +95,24 @@ export class Game {
     }
 
     public dispatch(action: any): void {
-        this._store.dispatch(action)
+        const currentState = this.getWorld()
+
+        const result = this._reducer(currentState, action, { world: currentState })
+
+        let [state, effect] = Array.isArray(result) ? result : [result, noop]
+
+        this._runEffect(effect)
 
         this._onAction.dispatch(action)
+
+        this._states.push({
+            state,
+            action,
+        })
+    }
+
+    private _runEffect(effect: Effect): void {
+        effect(this._dispatchFunction)
     }
 
     public pause(): void {
@@ -134,15 +127,8 @@ export class Game {
         this._timeMultiplier = time
     }
 
-    public getWorld(): World {
-        return this._store.getState()
-    }
-
-    public setView(renderFunction: RenderFunction): void {
-        // TODO: Stub out renderer for server
-        if (this._renderer) {
-            this._renderer.setView(renderFunction)
-        }
+    public addRenderer(renderer: RenderFunction<TWorld>): void {
+        this._renderers.push(renderer)
     }
 
     private _onFrame(): void {
@@ -154,7 +140,7 @@ export class Game {
             this._lastTickTime = perf - UPDATE_TIME
         }
 
-        let previousWorld = this._store.getState()
+        let previousWorld = this.getWorld()
 
         let delta = (perf - this._lastTickTime) * this._timeMultiplier + this._frameRemainderTime
 
@@ -166,9 +152,11 @@ export class Game {
         this._frameRemainderTime = delta
         this._lastTickTime = perf
 
+        // TODO: Add interpolation function here
+
         this._onFrameEvent.dispatch({
             previousWorld,
-            nextWorld: this._store.getState(),
+            nextWorld: this.getWorld(),
             alpha: this._frameRemainderTime / UPDATE_TIME,
         })
 
@@ -186,7 +174,7 @@ export class Game {
 
         this._tick++
 
-        this._store.dispatch({
+        this.dispatch({
             type: "@@core/TICK",
             deltaTime: deltaTime,
             tick: this._tick,
